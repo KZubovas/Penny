@@ -4,5 +4,7 @@ setup(name='Penny',
       description='some help with gadget, depend on pygadgetreader',
       author='mt',
       author_email='matas.tartenas@gmail.com',
-      packages=['Penny']
+      packages=['Penny'],
+      scripts=['example_scripts/density_plotter.py'],
+      package_data={'Penny': ['Data/snapshot_000','Data/snapshot_500']},
 )

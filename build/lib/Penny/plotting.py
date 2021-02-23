@@ -9,6 +9,7 @@ Created on Tue Feb 23 12:09:54 2021
 import numpy as np
 import matplotlib.pyplot as plt
 from .basic import *
+import scipy.spatial as sc
 
 def plotsnap(rho, snaptime, extent, quantity, plane, fname):
     
