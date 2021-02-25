@@ -11,10 +11,13 @@ import matplotlib.pyplot as plt
 from .basic import *
 import scipy.spatial as sc
 
-def plotsnap(rho, snaptime, extent, quantity, plane, fname):
+def plotsnap(rho, snaptime, extent, quantity, plane, fname, saveplot=False):
     
-    ma = 1# 
-    mi = ma/30# 
+    if saveplot==False:
+        print("saveplot==False:\nNot saving and not closing")
+        
+    ma = rho.max()*0.85# 
+    mi = ma/100# 
     rho_valn = rho.copy()
     rho_valn[rho_valn < mi] = mi
     rho_valn[rho_valn > ma] = ma
@@ -54,12 +57,14 @@ def plotsnap(rho, snaptime, extent, quantity, plane, fname):
     ax1.text(xl,yl,string, fontsize=8, c='k')
     ax1.locator_params(axis='both', nbins = 5)   #which = 'major',
         #Parodo
-    plt.savefig(fname, format='png', dpi=1200)
+    if saveplot:
+        plt.savefig(fname, format='png', dpi=300)
+        plt.close()
     #plt.show()
-    plt.close()
+    
 
 
-def plotprofile(pos, data, snaptime, fname, xlabel="x", ylabel="y", xmin=0, xmax=100, nbins=50, logTrue=True, meanLine=True, medianLine=False):
+def plotprofile(pos, data, snaptime, fname, xlabel="x", ylabel="y", xmin=0, xmax=100, nbins=50, logTrue=True, meanLine=True, medianLine=False,  saveplot=False):
 
     if meanLine&medianLine:
         print("meanLine or medianLine should be true at the same time\n ploting mean\n")
@@ -97,6 +102,7 @@ def plotprofile(pos, data, snaptime, fname, xlabel="x", ylabel="y", xmin=0, xmax
     ax1.set_xlabel(xlabel)
     ax1.set_ylabel(ylabel)
         #Parodo
-    plt.savefig(fname, format='png', dpi=300)
+    if saveplot:
+        plt.savefig(fname, format='png', dpi=300)
+        plt.close()
     #plt.show()
-    #plt.close()

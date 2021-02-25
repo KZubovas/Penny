@@ -10,18 +10,16 @@ import matplotlib.cm as cm
 import time
 from tqdm import tqdm
 import os
-#import dir_list as dl
-#import loader as loader
-#import Units as unt
-import gadget_helper.dir_list as dl
-import gadget_helper.loader as loader
-import gadget_helper.Units as unt
+
+
+import Penny.loader as loader
+import Penny.Units as unt
 
 import matplotlib.pyplot as plt
-from multiprocessing import Process
+
 import multiprocessing as mp
-import multiprocessing
-import operator
+
+
 
 
 """
@@ -88,7 +86,7 @@ def make_Dmap_data(path, extent, depth=4, quantity='density', plane='XY', rezX=5
 
 #Now we read the data from the snapshot
     import numpy as np
-    snaptime = readhead(path,'time')*unt.UnitTime_in_s/unt.year
+    snaptime = readhead(path,'time') * unt.UnitTime_in_s/ unt.year
     print("")
     print("Snapshot time is ", snaptime, " yr.")
     if quantity == 'density':
