@@ -14,7 +14,7 @@ matplotlib<br>
 <a href="https://github.com/jveitchmichaelis/pygadgetreader">pygadgetreader</a><br>
 scipy</p>
 <h2 id="customization">Customization</h2>
-<p>User should define Code units in: gadget_helper/Units.py</p>
+<p>User should define Code units in: Penny/Units.py</p>
 <h2 id="installation">Installation</h2>
 <blockquote>
 <p>python <a href="http://setup.py">setup.py</a> build     ## this builds the module</p>
@@ -23,11 +23,11 @@ scipy</p>
 <p>python <a href="http://setup.py">setup.py</a> install   ## this installs the module, may require sudo</p>
 </blockquote>
 <h2 id="usage">Usage</h2>
-<p>To load the tools, import the gadget_helper package:</p>
+<p>To load the tools, import the Penny package:</p>
 <blockquote>
 <p>import Penny as pen</p>
 </blockquote>
-<p>Now you have access to various commands. Examples are given in gh_examples.py (this file contains only the script, no command definitions).</p>
+<p>Now you have access to various commands. Examples are given in example_scripts/density_plotter.py and example_scripts/some_plotting_examples.py (these files contain only the script, no command definitions).</p>
 <p>Main commands are (parameters with * have default values so the command will run without providing them; it might not produce sensible results though):</p>
 <p><strong>For reading things in</strong>:</p>
 <ul>
@@ -66,6 +66,9 @@ scipy</p>
 </li>
 <li>
 <p><em>dotp(arr)</em> - dot product of two vectors</p>
+</li>
+<li>
+<p><em>getL(arr1,arr2)</em> - vector product of two vectors</p>
 </li>
 <li>
 <p><em>ToSph(pos)</em> - Tranformation function from Cartesian to Spherical coordinates</p>
