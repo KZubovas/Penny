@@ -17,8 +17,7 @@ import Penny.Units as unt
 
 import matplotlib.pyplot as plt
 
-import multiprocessing as mp
-
+import scipy.spatial as scs
 
 
 #this is the primary density map making routine for SPH (Gadget) simulation results
@@ -190,29 +189,83 @@ def make_Dmap_data(path, extent, depth=4, quantity='density', plane='XY', rezX=5
 
 #this is the primary density map making routine for moving-mesh (Arepo) simulation results
 
-#TBD
+def make_Dmap_data_Tree(path, quantity='density', extent=[-5, 5, -5., 5.,-1.25, 1.25], plane='XY', rezX=512, rezY=512, rezZ=124, hsml_cut=True):
+    print("here be dragons")
+    start = time.time()
+    
+    print("")
+    snaptime = readhead(path,'time') * unt.UnitTime_in_s/ unt.year
+    print("Snapshot time is ", snaptime, " yr.")
+    if quantity == 'density':
+        DATA = loader.loader_f(path, partType='gas',wantedData=['pos','mass', 'hsml','rho'])
+    if quantity == 'temperature':
+        DATA = loader.loader_f(path, partType='gas',wantedData=['pos','mass', 'hsml', 'u', 'rho'])
+        u_to_temp_fac = unt.mu_ion * unt.mp / unt.kk * (5./3-1.) * unt.UnitEnergy_in_cgs / unt.UnitMass_in_g
+        temp = DATA['u']*u_to_temp_fac
+        dens = DATA['rho']
+    if (quantity != 'temperature') and (quantity != 'density'):
+        print("using "+quantity+" as quantity.")
+        DATA = loader.loader_f(path, partType='gas',wantedData=['pos','mass', 'hsml', 'u', quantity])
+        
+    pos = DATA['pos'].astype(np.float)
+    if plane=='XY':
+        xgas = pos[:,0]
+        ygas = pos[:,1]
+        zgas = pos[:,2]
+    if plane=='YZ':
+        xgas = pos[:,2]
+        ygas = pos[:,0]
+        zgas = pos[:,1]       
+    if (plane=='ZX' or plane=='XZ'):
+        xgas = pos[:,1]
+        ygas = pos[:,2]
+        zgas = pos[:,0]
+    rho = DATA["rho"].astype(np.float)
+    if hsml_cut:
+        h = DATA["hsml"].astype(np.float)
+    ## extent given in code units
+    XX, YY = np.meshgrid(np.linspace(extent[0],extent[1],rezX),np.linspace(extent[2],extent[3],rezY)) ## Būtų greičiau, perduot mesh grid, o ne generuot iš skyros kiekvieną kart
+    XX = XX.reshape(-1).astype(np.float)
+    YY = YY.reshape(-1).astype(np.float)
+    ZZ = np.linspace(extent[4],extent[5],rezZ)
+    Rho = np.zeros([rezY, rezX])
+    Tree = scs.cKDTree(pos)
+    for z in ZZ:
+        zzz = (z * np.ones_like(XX)).astype(np.float)
+        R, IND = Tree.query(np.array([XX,YY,zzz]).T, k=1)
+        rho1 = rho[IND.astype(int)]#.reshape(rezy,rezx) * gh.UnitDensity_in_cgs * L  # * gh.UnitMass_in_g / A
+        if hsml_cut:
+            h1 = h[IND.astype(int)]
+            rho1[R>h1] = 0
+        rho1=rho1.reshape(rezY,rezX)
+                          
+        Rho += rho1
+        print( '\rAt z level {:3f}'.format(z), end='',flush=True)
+    print('Rho map done [in code units]')
+    print('It took', time.time()-start, 'seconds.')
+    return Rho
 
 
 #this creates a 3D cube of voxels with density values; use at your own peril!
 
-def Par_make_Dmap3D_data_2(pn,nproc, path, extent=[-5, 5, -5., 5., -5., 5.], rezX=512, rezY=512, rezZ=512):
+def make_Dmap3D_data(path, extent=[-5, 5, -5., 5., -5., 5.], rezX=512, rezY=512, rezZ=512):
     start = time.time()
     DATA = loader.loader_f(path, partType='gas', wantedData=['pos','mass', 'hsml'])
     pos = DATA['pos'].astype('f')
     mgas = DATA['mass'].astype('f')
    #LEN = mgas.shape[0]
-    hsml = DATA['hsml'][pn::nproc].astype('f')
+    hsml = DATA['hsml'][:].astype('f')
     #Split DATA
-    mgas = mgas[pn::nproc].astype('f')
+    mgas = mgas[:].astype('f')
     
-    xgas = pos[pn::nproc,0].astype('f')
-    ygas = pos[pn::nproc,1].astype('f')
-    zgas = pos[pn::nproc,2].astype('f')
+    xgas = pos[:,0].astype('f')
+    ygas = pos[:,1].astype('f')
+    zgas = pos[:,2].astype('f')
     print("iki 2ia")
 
-    XL = abs(extent[0]) + abs(extent[1])
-    YL = abs(extent[2]) + abs(extent[3])
-    ZL = abs(extent[4]) + abs(extent[5])
+    XL = abs(extent[0] - extent[1])
+    YL = abs(extent[2] - extent[3])
+    ZL = abs(extent[4] - extent[5])
     #apibreziu tankio masyva
     rho_val = np.zeros([rezY,rezX,rezZ]).astype('f')
     #normavimo konstanta
@@ -304,7 +357,7 @@ def Par_make_Dmap3D_data_2(pn,nproc, path, extent=[-5, 5, -5., 5., -5., 5.], rez
                 j = np.array(np.floor(j), dtype=int)
                 k = np.array(np.floor(k), dtype=int)
                 #rho_val[j[:,np.newaxis], i] += mgas[n]*wk[masksq].reshape([len(j), len(i)])/summ
-                rho_val[k[:,np.newaxis,np.newaxis], j[:,np.newaxis], i] += mgas[n]*wk[mask3d].reshape([len(k),len(j), len(i)]) / summ380
+                rho_val[k[:,np.newaxis,np.newaxis], j[:,np.newaxis], i] += mgas[n]*wk[mask3d].reshape([len(k),len(j), len(i)]) / summ
                 #rho_val[0,1:5,1:5] += 0.2
             del dx, dy, dz, xx, yy, zz, r2, r3, r, u, wk, summ, xxx, yyy, zzz, maskX, maskY, maskZ, masksq, mask3d, i, j, k
     rho_val = rho_val  / darea # Dauginti i6 unit column density
