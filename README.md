@@ -37,8 +37,8 @@ Now you have access to various commands. Examples are given in gh_examples.py (t
 Main commands are (parameters with * have default values so the command will run without providing them; it might not produce sensible results though):
 
 **For reading things in**:  
-___loader_f___(path, *partType, *wantedData) - reads in the snapshot at path, gets you the wantedData from particles of type partType. Run loader_f('dummy') to see the list of available partTypes and wantedDatas.
-loadMost(path, *partType) reads in the snapshot at path, gets you the commonly-used data from particles of type partType; additionally, produces a few commonly used derivative quantities: rtot, vtot, vrad, vtan, angmom.
+___loader_f(path, *partType, *wantedData)___ - reads in the snapshot at path, gets you the wantedData from particles of type partType. Run loader_f('dummy') to see the list of available partTypes and wantedDatas.  
+___loadMost(path, *partType)___ reads in the snapshot at path, gets you the commonly-used data from particles of type partType; additionally, produces a few commonly used derivative quantities: rtot, vtot, vrad, vtan, angmom.
 
 **Density map maker**:  
 ___make_Dmap_data___(path, extent, *depth, *quantity, *plane, *rezX, *rezY, *kernel) - reads in the snapshot at path, calculates the density map as an array of projected density values. The array has dimensions rezX*rezY and encompasses the region defined by extent. Only material within depth from the midplane is used. quantity can be density or temperature; plane can be XY, XZ, YZ; kernel should be the same as the one used in the simulation (default is "wendland2"). Returns both density and the snapshot time.
