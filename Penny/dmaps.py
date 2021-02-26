@@ -220,7 +220,7 @@ def make_Dmap_data_Tree(path, quantity='density', extent=[-5, 5, -5., 5.,-1.25, 
         xgas = pos[:,1]
         ygas = pos[:,2]
         zgas = pos[:,0]
-    rho = DATA["rho"].astype(np.float)
+    rho = DATA[quantity].astype(np.float)
     if hsml_cut:
         h = DATA["hsml"].astype(np.float)
     ## extent given in code units
@@ -261,7 +261,6 @@ def make_Dmap3D_data(path, extent=[-5, 5, -5., 5., -5., 5.], rezX=512, rezY=512,
     xgas = pos[:,0].astype('f')
     ygas = pos[:,1].astype('f')
     zgas = pos[:,2].astype('f')
-    print("iki 2ia")
 
     XL = abs(extent[0] - extent[1])
     YL = abs(extent[2] - extent[3])
