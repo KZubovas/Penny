@@ -41,14 +41,14 @@ def CartRot(pos, theta, phi):
         pos = pos.reshape(1,3)
         
     posn = np.zeros_like(pos)
-    #Tor bu phi (round z)
+    #Rot by phi (around z)
     posn[:, 0] = np.cos(phi) * pos[:,0] - np.sin(phi) * pos[:,1]  
     posn[:, 1] = np.sin(phi) * pos[:,0] + np.cos(phi) * pos[:,1]  
     posn[:, 2] = pos[:,2]
     pos = 0
     pos = posn.copy()
     
-    #Tor bu theta (round y)
+    #Rot by theta (around y)
     posn[:, 0] = np.cos(theta) * pos[:,0] + np.sin(theta) * pos[:,2]  
     posn[:, 1] = pos[:,1]
     posn[:, 2] = np.cos(theta) * pos[:,2] - np.sin(theta) * pos[:,0]

@@ -1,9 +1,5 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Tue Feb 23 12:09:54 2021
-
-@author: kz
+Tools for plotting data
 """
 
 import numpy as np
@@ -69,6 +65,9 @@ def plotprofile(pos, data, snaptime, fname, xlabel="x", ylabel="y", xmin=0, xmax
     if meanLine&medianLine:
         print("meanLine or medianLine should be true at the same time\n ploting mean\n")
     
+    if saveplot==False:
+        print("saveplot==False:\nNot saving and not closing")
+
     fig, ax1 = plt.subplots(figsize=(3.5,3.5), dpi=300)
     plt.subplots_adjust(left=0.15, right=0.85, top=0.85, bottom=0.15)
     ax1.tick_params(axis='both', which='both', direction='in', top=True, right=True)
