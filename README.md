@@ -14,7 +14,7 @@ matplotlib<br>
 <a href="https://github.com/jveitchmichaelis/pygadgetreader">pygadgetreader</a><br>
 scipy</p>
 <h2 id="customization">Customization</h2>
-<p>User should define Code units in: Penny/Units.py</p>
+<p>User should define Code units in: Penny/Units.py. Do this <em>before</em> building and installing the package. In general, you should only need to define the unit length and mass based on what is used in your simulation, the rest of the units are calculated based on these, assuming G = 1 in code units.</p>
 <h2 id="installation">Installation</h2>
 <blockquote>
 <p>python <a href="http://setup.py">setup.py</a> build     ## this builds the module</p>
