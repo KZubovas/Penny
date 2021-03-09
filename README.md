@@ -41,7 +41,7 @@ scipy</p>
 <p><strong>Density map generation</strong>:</p>
 <ul>
 <li>
-<p><em>make_Dmap_data(path, extent, *depth, *quantity, *plane, *rezX, *rezY, *kernel)</em> - reads in the snapshot at path, calculates the density map as an array of projected density values. The array has dimensions rezX*rezY and encompasses the region defined by extent. Only material within depth from the midplane is used. quantity can be density or temperature; plane can be XY, XZ, YZ; kernel should be the same as the one used in the simulation (default is “wendland2”). Returns both density and the snapshot time.</p>
+<p><em>make_Dmap_data(path, extent, *depth, *quantity, *plane, *rezX, *rezY, *kernel)</em> - reads in the snapshot at path, calculates the density map as an array of projected density values. The array has dimensions rezX*rezY and encompasses the region defined by extent. Only material within depth from the midplane is used. quantity can be density or temperature; plane can be XY, XZ, YZ; kernel should be the same as the one used in the simulation (default is “wendland2”). Returns both density and the snapshot time. Prints out snapshot path, particle quantities by type and snapshot time in the console.</p>
 </li>
 <li>
 <p><em>make_Dmap_data_Tree(path, *quantity, extent, *plane, *rezX, *rezY, *rezZ, *hsml_cut)</em> -  reads in the snapshot at path, calculates the density map of any select quantity. Values for a given pixel are determined by the closest particle using scipy.spatial.cKDtree. This is performed sequentially adding together a given *rezZ number of layers. Preffered method for moving mesh codes.</p>
@@ -53,7 +53,7 @@ scipy</p>
 <p><strong>Plotting</strong>:</p>
 <ul>
 <li>
-<p><em>plotsnap(rho, snaptime, extent, quantity, plane, fname)</em> - plots a density map given by rho, adds a label of snaptime. extent is used to determine the axis ranges, quantity determines the label on the colourbar and the colour used for plotting (blue for density, red for temperature), plane determines axis labels. The plot is saved in fname (it should be the whole path to the file, unless you want the file in the same directory as the analysis tools).</p>
+<p><em>plotsnap(rho, snaptime, extent, quantity, plane, fname, *maxval, *mimaratio, *saveplot)</em> - plots a density map given by rho, adds a label of snaptime. extent is used to determine the axis ranges, quantity determines the label on the colourbar and the colour used for plotting (blue for density, red for temperature), plane determines axis labels. The plot is saved in fname (it should be the whole path to the file, unless you want the file in the same directory as the analysis tools); however, saving to file is turned off by default (change by setting saveplot=True). Define maxval to limit the highest plotted density to a particular value (default is based on the maximum in the existing density map); mimaratio is the ratio between maximum and minimum density to be plotted (default is 100).</p>
 </li>
 <li>
 <p><em>plotprofile(pos, data, snaptime, fname, *xlabel, *ylabel, *xmin, *xmax, *nbins, *logTrue, *meanLine, *medianLine)</em> - plots a radial scatter plot and profile of data values, adds snaptime label, saves in fname. xlabel and ylabel are axis labels, xmin and xmax are horizontal axis ranges, nbins is number of bins for the calculation of mean/median line, logTrue determines whether the y axis should be logarithmic, meanLine overplots mean of the data in each bin, medianLine overplots median of the data.</p>
