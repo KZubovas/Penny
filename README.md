@@ -15,6 +15,7 @@ matplotlib<br>
 scipy</p>
 <h2 id="customization">Customization</h2>
 <p>User should define Code units in: Penny/Units.py. Do this <em>before</em> building and installing the package. In general, you should only need to define the unit length and mass based on what is used in your simulation, the rest of the units are calculated based on these, assuming G = 1 in code units.</p>
+<p>The file Custom/Custom.py is a place to define various commands that you might wish to change while working. If you define them here, you won't need to rebuild Penny, only to reimport it into your script. To reimport Penny, either restart the kernel or use importlib.reload(pen) (after importing the importlib package).</p>
 <h2 id="installation">Installation</h2>
 <blockquote>
 <p>python <a href="http://setup.py">setup.py</a> build     ## this builds the module</p>
