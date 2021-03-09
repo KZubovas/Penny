@@ -1,33 +1,5 @@
 """
 Contains functions to load most used data
-pyGadgetReader
-Author: Robert Thompson
-  ---------------------
-  -  STANDARD BLOCKS  -
-  ---------------------
-   pos         - (all)         Position data
-   vel         - (all)         Velocity data code units
-   pid         - (all)         Particle ids
-   mass        - (all)         Particle masses
-   u           - (gas)         Internal energy
-   rho         - (gas)         Density
-   ne          - (gas)         Number density of free electrons
-   nh          - (gas)         Number density of neutral hydrogen
-   hsml        - (gas)         Smoothing length of SPH particles
-   sfr         - (gas)         Star formation rate in Msun/year
-   age         - (stars)       Formation time of stellar particles
-   z           - (gas & stars) Metallicty of gas/star particles (returns total Z)
-   pot         - (all)         Potential of particles (if present in output)
-
-SUPPORTED PARTICLE TYPES:
-
-   gas         - Type0: Gas
-   dm          - Type1: Dark Matter
-   disk        - Type2: Disk particles
-   bulge       - Type3: Bulge particles
-   star        - Type4: Star particles
-   bndry       - Type5: Boundary particles
-
 """
 
 import numpy as np
@@ -106,12 +78,3 @@ def loadMost(path, partType="None"):
     
     return data_in
     
-
-
-
-if __name__ == "__main__":
-    path = dl.path_dict['Acc_storage']
-    test_path = path+"/acc_modeliai_sg/sg_ang000/snapshot_000"
-    
-    DATA = loader_f(test_path, "gas", wantedData=['pos','vel', 'mass'])
-    print(DATA)

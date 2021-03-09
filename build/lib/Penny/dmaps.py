@@ -1,5 +1,5 @@
 """
-Tankio žemėlapius/kubus konstruojančios funkcijos
+Density map production
 """
 import numpy as np
 import math
@@ -17,14 +17,10 @@ import Penny.Units as unt
 
 import matplotlib.pyplot as plt
 
-import multiprocessing as mp
+import scipy.spatial as scs
 
 
-
-
-"""
-IF FUBAR
-"""
+#this is the primary density map making routine for SPH (Gadget) simulation results
 
 def make_Dmap_data(path, extent, depth=4, quantity='density', plane='XY', rezX=512, rezY=512, kernel="wendland2"):
     start = time.time()
@@ -87,8 +83,11 @@ def make_Dmap_data(path, extent, depth=4, quantity='density', plane='XY', rezX=5
 #Now we read the data from the snapshot
     import numpy as np
     snaptime = readhead(path,'time') * unt.UnitTime_in_s/ unt.year
+    partlist = readhead(path,'npartTotal').tolist()
     print("")
+    print("Reading snapshot ", path, ".")
     print("Snapshot time is ", snaptime, " yr.")
+    print("Particle quantities of each type are: ", partlist, ".")
     if quantity == 'density':
         DATA = loader.loader_f(path, partType='gas',wantedData=['pos','mass', 'hsml'])
     if quantity == 'temperature':
@@ -191,421 +190,84 @@ def make_Dmap_data(path, extent, depth=4, quantity='density', plane='XY', rezX=5
     return rho_val, snaptime
 
 
+#this is the primary density map making routine for moving-mesh (Arepo) simulation results
 
-
-
-
-def make_Dmap_data_old(path, extent=[-5, 5, -5., 5.], rezX=512, rezY=512):
+def make_Dmap_data_Tree(path, quantity='density', extent=[-5, 5, -5., 5.,-1.25, 1.25], plane='XY', rezX=512, rezY=512, rezZ=124, hsml_cut=True):
+    print("here be dragons")
     start = time.time()
-    import numpy as np
-    DATA = loader.loader_f(path, partType='gas',wantedData=['pos','mass', 'hsml'])
-    pos = DATA['pos']
-    xgas = pos[:,0]
-    ygas = pos[:,1]
-    zgas = pos[:,2]
     
-    mgas = DATA['mass']
-    hsml = DATA['hsml']
-    print(extent, "some new")
-    #print("hi")
-    #pasirenku zemelapio erdve
-    XL = abs(extent[0]) + abs(extent[1])
-    YL = abs(extent[2]) + abs(extent[3])
-    #apibreziu tankio masyva
-    rho_val = np.zeros([rezY,rezX])
-    #normavimo konstanta
-    darea =  (XL)*(YL)/rezX/rezY    
-    #Erdvė turi būti teigiama, pastumti gali ir nereikėti
-    xgn = xgas + extent[1]
-    ygn = ygas + extent[3]
-    
-    
-    #pixelio dydis
-    pixelsizeY = YL / rezY
-    pixelsizeX = XL / rezX
-    #glotninimo ilgio  min/max
-    hmin = 1.001 * (pixelsizeY**2 + pixelsizeX**2)**0.5 / 2.
-    hmax = (pixelsizeY**2 + pixelsizeX**2)**0.5 * 3000
-     
-    #Dalelės tinkamumo sąlygos
-    a = np.array(xgn - hsml <= XL) 
-    b = np.array(ygn - hsml <= YL)
-    c = np.array(xgn + hsml >= 0) 
-    d = np.array(ygn + hsml >=0)
-    e = np.array(np.abs(zgas) <= 4)
-    condition_a = a&b&c&d&e
-    
-    h = hsml.copy()
-    h[h < hmin] = hmin
-    h[h >= hmax] = hmax
-    
-    x = (np.floor(xgn / pixelsizeX) + 0.5) * pixelsizeX
-    y = (np.floor(ygn / pixelsizeY) + 0.5) * pixelsizeY
-    npx = np.floor(h / pixelsizeX)
-    npy = np.floor(h / pixelsizeY)
-    print('Starting density calculation:')
-    for n in tqdm(range(len(xgn))):
-        if (condition_a[n] == True):
-            dx = np.arange(-npx[n], npx[n]+1,1)
-            dy = np.arange(-npy[n], npy[n]+1,1)
-                    
-            xx = x[n] + pixelsizeX * dx - xgn[n]
-            yy = y[n] + pixelsizeY * dy - ygn[n]
-            
-            #2D matrica su spindulio kvadratais
-            r2 = (yy * yy)[:,np.newaxis] + xx * xx
-            r = np.sqrt(r2)
-    
-            u = np.sqrt(r2) / h[n]
-            
-            #Wendland kažkuris kernelis
-            wk = (1 - u) * (1 - u) * (1 - u) * (1 - u) * (1 + 4 * u)
-            wk[u*h[n] > h[n]] = 0 
-            summ = np.sum( wk )
-            if summ > 10e-10:
-                xxx = xx + xgn[n]
-                yyy = yy + ygn[n]
-    
-                
-                #indexai realus
-                maskX = (xxx < XL) & (xxx > 0)
-                maskY =  (yyy < YL) &  (yyy > 0)
-                masksq = maskY[:,np.newaxis] * maskX
-                i = xxx[maskX] / pixelsizeX
-                j = yyy[maskY] / pixelsizeY
-                i = np.array(np.floor(i), dtype=int)
-                j = np.array(np.floor(j), dtype=int)
-                 
-                rho_val[j[:,np.newaxis], i] += mgas[n]*wk[masksq].reshape([len(j), len(i)])/summ
-    rho_val = rho_val / darea # *Unit Column Density
-    print('Rho map done [in code units]')
-    print('It took', time.time()-start, 'seconds.')
-    return rho_val
-
-# def make_Dmap_data(path, extent=[-5, 5, -5., 5.], rezX=512, rezY=512, proj="xy", rot=0, ax=0, ay=0, az=0, mode='full'):
-#     start = time.time()
-#     DATA = loader.loader_f(path, partType='gas',wantedData=['pos','vel','mass', 'hsml'])
-#     pos = DATA['pos']
-#     vel = DATA['pos']
-#     vx = vel[:,0]
-#     vy = vel[:,1]
-#     vz = vel[:,2]
-#     if proj=="xy":
-#         xgas = pos[:,0]
-#         ygas = vy#pos[:,1]
-#         zgas = vy#pos[:,2]
-#     if proj=="xz":
-#         xgas = pos[:,0]
-#         zgas = pos[:,1]
-#         ygas = pos[:,2]
-#     if proj=="yz":
-#         zgas = pos[:,0]
-#         xgas = pos[:,1]
-#         ygas = pos[:,2]
-#     mgas = DATA['mass']
-#     hsml = DATA['hsml']
-#     #ygas = vy
-    
-#     ax = ax * np.pi/180
-#     ay = ay * np.pi/180
-#     az = az * np.pi/180
-#     if rot == 1:
-#         #around y
-#         zdash = zgas * np.cos(ay) - xgas * np.sin(ay)
-#         xdash = zgas * np.sin(ay) + xgas * np.cos(ay)
-#         zgas = zdash
-#         xgas = xdash
-#         #around x
-#         ydash = ygas * np.cos(ax) - zgas * np.sin(ax)
-#         zdash = ygas * np.sin(ax) + zgas * np.cos(ax)
-#         zgas = zdash
-#         ygas = ydash
-    
-    
-#         #around z
-#         xdash = xgas * np.cos(az) - ygas * np.sin(az)
-#         ydash = xgas * np.sin(az) + ygas * np.cos(az)
-#         xgas = xdash
-#         ygas = ydash
-    
-#     #pasirenku zemelapio erdve
-#     XL = abs(extent[0]) + abs(extent[1])
-#     YL = abs(extent[2]) + abs(extent[3])
-#     #apibreziu tankio masyva
-#     rho_val = np.zeros([rezY,rezX])
-#     #normavimo konstanta
-#     darea =  (XL)*(YL)/rezX/rezY    
-#     #Erdvė turi būti teigiama, pastumti gali ir nereikėti
-#     xgn = xgas + extent[1]
-#     print("ygn priskirta zgas, pakeisti normaliems")
-#     ygn = ygas+extent[3]#zgas + extent[3]
-    
-#     #pixelio dydis
-#     pixelsizeY = YL / rezY
-#     pixelsizeX = XL / rezX
-#     #glotninimo ilgio  min/max
-#     hmin = 1.001 * (pixelsizeY**2 + pixelsizeX**2)**0.5 / 2.
-#     hmax = (pixelsizeY**2 + pixelsizeX**2)**0.5 * 3000
-     
-#     #Dalelės tinkamumo sąlygos
-#     if mode=='full':
-#         a = np.array(xgn - hsml <= XL) 
-#         b = np.array(ygn - hsml <= YL)
-#         c = np.array(xgn + hsml >= 0) 
-#         d = np.array(np.abs(zgas) <= 4)
-#         e = np.array(ygn + hsml >=0)
-#         condition_a = a&b&c&d&e
-#     if mode=='slice':
-#         a = np.array(xgn - hsml <= XL) 
-#         b = np.array(ygn - hsml <= YL)
-#         c = np.array(xgn + hsml >= 0) 
-#         d = np.array(np.abs(ygas) <= 0.1+hsml)
-#         e = np.array(ygn + hsml >= 0)
-#         condition_a = a&b&c&d&e
+    print("")
+    snaptime = readhead(path,'time') * unt.UnitTime_in_s/ unt.year
+    print("Snapshot time is ", snaptime, " yr.")
+    if quantity == 'density':
+        DATA = loader.loader_f(path, partType='gas',wantedData=['pos','mass', 'hsml','rho'])
+    if quantity == 'temperature':
+        DATA = loader.loader_f(path, partType='gas',wantedData=['pos','mass', 'hsml', 'u', 'rho'])
+        u_to_temp_fac = unt.mu_ion * unt.mp / unt.kk * (5./3-1.) * unt.UnitEnergy_in_cgs / unt.UnitMass_in_g
+        temp = DATA['u']*u_to_temp_fac
+        dens = DATA['rho']
+    if (quantity != 'temperature') and (quantity != 'density'):
+        print("using "+quantity+" as quantity.")
+        DATA = loader.loader_f(path, partType='gas',wantedData=['pos','mass', 'hsml', 'u', quantity])
         
-#         # if xgn[n] - hsml[n] <= XL and xgn[n] + hsml[n] >= 0 and ygn[n] - hsml[n] <= YL and ygn[n] + hsml[n] >=0 and zgas[n] <= 0.05 and zgas[n] >=-0.05:
-#     h = hsml.copy()
-#     h[h < hmin] = hmin
-#     h[h >= hmax] = hmax
-    
-#     x = (np.floor(xgn / pixelsizeX) + 0.5) * pixelsizeX
-#     y = (np.floor(ygn / pixelsizeY) + 0.5) * pixelsizeY
-#     npx = np.floor(h / pixelsizeX)
-#     npy = np.floor(h / pixelsizeY)
-#     print('Starting density calculation:')
-#     for n in tqdm(range(len(xgn))):
-#         if (condition_a[n] == True):
-#             dx = np.arange(-npx[n], npx[n]+1,1)
-#             dy = np.arange(-npy[n], npy[n]+1,1)
-                    
-#             xx = x[n] + pixelsizeX * dx - xgn[n]
-#             yy = y[n] + pixelsizeY * dy - ygn[n]
-            
-#             #2D matrica su spindulio kvadratais
-#             r2 = (yy * yy)[:,np.newaxis] + xx * xx
-#             r = np.sqrt(r2)
-    
-#             u = np.sqrt(r2) / h[n]
-            
-#             #Wendland kažkuris kernelis
-#             wk = (1 - u) * (1 - u) * (1 - u) * (1 - u) * (1 + 4 * u)
-#             wk[u*h[n] > h[n]] = 0 
-#             summ = np.sum( wk )
-#             if summ > 10e-10:
-#                 xxx = xx + xgn[n]
-#                 yyy = yy + ygn[n]
-    
-                
-#                 #indexai realus
-#                 maskX = (xxx < XL) & (xxx > 0)
-#                 maskY =  (yyy < YL) &  (yyy > 0)
-#                 masksq = maskY[:,np.newaxis] * maskX
-#                 i = xxx[maskX] / pixelsizeX
-#                 j = yyy[maskY] / pixelsizeY
-#                 i = np.array(np.floor(i), dtype=int)
-#                 j = np.array(np.floor(j), dtype=int)
-                 
-#                 rho_val[j[:,np.newaxis], i] += mgas[n]*wk[masksq].reshape([len(j), len(i)])/summ
-#                 #rho_val[j[:,np.newaxis], i] += vy[n]*wk[masksq].reshape([len(j), len(i)])/summ
-#     rho_val = rho_val / darea # *Unit Column Density
-#     #del dx, dy, xx, yy,  r2,  r, u, wk, summ, xxx, yyy,  maskX, maskY,  masksq, i, j
-#     print('Rho map done [in code units]')
-#     print('It took', time.time()-start, 'seconds.')
-#     return rho_val
-
-
-
-#geriau veikia Par[..]2
-def Par_make_Dmap_data(pn, path, extent=[-5, 5, -5., 5.], rezX=512, rezY=512):
-    start = time.time()
-    DATA = loader.loader_f(path, partType='gas',wantedData=['pos','mass', 'hsml'])
-    pos = DATA['pos']
-    mgas = DATA['mass']
-    LEN = mgas.shape[0]
-    #Split DATA
-    mgas = mgas[int(pn*np.floor(LEN/6)):int(np.floor(LEN/6)*(pn+1))]
-    xgas = pos[int(pn*np.floor(LEN/6)):int(np.floor(LEN/6)*(pn+1)),0]
-    
-    ygas = pos[int(pn*np.floor(LEN/6)):int(np.floor(LEN/6)*(pn+1)),1]
-    zgas = pos[int(pn*np.floor(LEN/6)):int(np.floor(LEN/6)*(pn+1)),2]
-    
-    hsml = DATA['hsml'][int(pn*np.floor(LEN/6)):int(np.floor(LEN/6)*(pn+1))]
-    #pasirenku zemelapio erdve
-    XL = abs(extent[0]) + abs(extent[1])
-    YL = abs(extent[2]) + abs(extent[3])
-    #apibreziu tankio masyva
-    rho_val = np.zeros([rezY,rezX])
-    #normavimo konstanta
-    darea =  (XL)*(YL)/rezX/rezY    
-    #Erdvė turi būti teigiama, pastumti gali ir nereikėti
-    xgn = xgas + extent[1]
-    ygn = ygas + extent[3]
-    
-    
-    #pixelio dydis
-    pixelsizeY = YL / rezY
-    pixelsizeX = XL / rezX
-    #glotninimo ilgio  min/max
-    hmin = 1.001 * (pixelsizeY**2 + pixelsizeX**2)**0.5 / 2.
-    hmax = (pixelsizeY**2 + pixelsizeX**2)**0.5 * 3000
-     
-    #Dalelės tinkamumo sąlygos
-    a = np.array(xgn - hsml <= XL) 
-    b = np.array(ygn - hsml <= YL)
-    c = np.array(xgn + hsml >= 0) 
-    d = np.array(np.abs(zgas) <= 4)
-    e = np.array(ygn + hsml >=0)
-    condition_a = a&b&c&d&e
-    
-    h = hsml.copy()
-    h[h < hmin] = hmin
-    h[h >= hmax] = hmax
-    
-    x = (np.floor(xgn / pixelsizeX) + 0.5) * pixelsizeX
-    y = (np.floor(ygn / pixelsizeY) + 0.5) * pixelsizeY
-    npx = np.floor(h / pixelsizeX)
-    npy = np.floor(h / pixelsizeY)
-    print('Starting density calculation:')
-    for n in range(len(xgn)):
-        if (condition_a[n] == True):
-            dx = np.arange(-npx[n], npx[n]+1,1)
-            dy = np.arange(-npy[n], npy[n]+1,1)
-                    
-            xx = x[n] + pixelsizeX * dx - xgn[n]
-            yy = y[n] + pixelsizeY * dy - ygn[n]
-            
-            #2D matrica su spindulio kvadratais
-            r2 = (yy * yy)[:,np.newaxis] + xx * xx
-            r = np.sqrt(r2)
-    
-            u = np.sqrt(r2) / h[n] 
-            #Wendland kažkuris kernelis
-            wk = (1 - u) * (1 - u) * (1 - u) * (1 - u) * (1 + 4 * u)
-            wk[u*h[n] > h[n]] = 0 
-            summ = np.sum( wk )
-            if summ > 10e-10:
-                xxx = xx + xgn[n]
-                yyy = yy + ygn[n]
-                #indexai realus
-                maskX = (xxx < XL) & (xxx > 0)
-                maskY =  (yyy < YL) &  (yyy > 0)
-                masksq = maskY[:,np.newaxis] * maskX
-                i = xxx[maskX] / pixelsizeX
-                j = yyy[maskY] / pixelsizeY
-                i = np.array(np.floor(i), dtype=int)
-                j = np.array(np.floor(j), dtype=int)              
-                rho_val[j[:,np.newaxis], i] += mgas[n]*wk[masksq].reshape([len(j), len(i)])/summ
-    rho_val = rho_val / darea # *Unit Column Density
-    del dx, dy, xx, yy,  r2,  r, u, wk, summ, xxx, yyy,  maskX, maskY,  masksq, i, j
+    pos = DATA['pos'].astype(np.float)
+    if plane=='XY':
+        xgas = pos[:,0]
+        ygas = pos[:,1]
+        zgas = pos[:,2]
+    if plane=='YZ':
+        xgas = pos[:,2]
+        ygas = pos[:,0]
+        zgas = pos[:,1]       
+    if (plane=='ZX' or plane=='XZ'):
+        xgas = pos[:,1]
+        ygas = pos[:,2]
+        zgas = pos[:,0]
+    rho = DATA[quantity].astype(np.float)
+    if hsml_cut:
+        h = DATA["hsml"].astype(np.float)
+    ## extent given in code units
+    XX, YY = np.meshgrid(np.linspace(extent[0],extent[1],rezX),np.linspace(extent[2],extent[3],rezY)) ## Būtų greičiau, perduot mesh grid, o ne generuot iš skyros kiekvieną kart
+    XX = XX.reshape(-1).astype(np.float)
+    YY = YY.reshape(-1).astype(np.float)
+    ZZ = np.linspace(extent[4],extent[5],rezZ)
+    Rho = np.zeros([rezY, rezX])
+    Tree = scs.cKDTree(pos)
+    for z in ZZ:
+        zzz = (z * np.ones_like(XX)).astype(np.float)
+        R, IND = Tree.query(np.array([XX,YY,zzz]).T, k=1)
+        rho1 = rho[IND.astype(int)]#.reshape(rezy,rezx) * gh.UnitDensity_in_cgs * L  # * gh.UnitMass_in_g / A
+        if hsml_cut:
+            h1 = h[IND.astype(int)]
+            rho1[R>h1] = 0
+        rho1=rho1.reshape(rezY,rezX)
+                          
+        Rho += rho1
+        print( '\rAt z level {:3f}'.format(z), end='',flush=True)
     print('Rho map done [in code units]')
-    print("imshow flips Y axis, take care")
     print('It took', time.time()-start, 'seconds.')
-    return rho_val
+    return Rho
 
-def Par_make_Dmap_data_2(pn, nproc, path, extent=[-5, 5, -5., 5.], rezX=512, rezY=512):
-    start = time.time()
-    DATA = loader.loader_f(path, partType='gas',wantedData=['pos','mass', 'hsml'])
-    pos = DATA['pos']
-    mgas = DATA['mass']
-    LEN = mgas.shape[0]
-    #Split DATA
-    mgas = mgas[pn::nproc]
-    xgas = pos[pn::nproc,0]
-    
-    ygas = pos[pn::nproc,1]
-    zgas = pos[pn::nproc,2]
-    
-    hsml = DATA['hsml'][pn::nproc]
-    #pasirenku zemelapio erdve
-    XL = abs(extent[0]) + abs(extent[1])
-    YL = abs(extent[2]) + abs(extent[3])
-    #apibreziu tankio masyva
-    rho_val = np.zeros([rezY,rezX])
-    #normavimo konstanta
-    darea =  (XL)*(YL)/rezX/rezY    
-    #Erdvė turi būti teigiama, pastumti gali ir nereikėti
-    xgn = xgas + extent[1]
-    ygn = ygas + extent[3]
-    
-    
-    #pixelio dydis
-    pixelsizeY = YL / rezY
-    pixelsizeX = XL / rezX
-    #glotninimo ilgio  min/max
-    hmin = 1.001 * (pixelsizeY**2 + pixelsizeX**2)**0.5 / 2.
-    hmax = (pixelsizeY**2 + pixelsizeX**2)**0.5 * 3000
-     
-    #Dalelės tinkamumo sąlygos
-    a = np.array(xgn - hsml <= XL) 
-    b = np.array(ygn - hsml <= YL)
-    c = np.array(xgn + hsml >= 0) 
-    d = np.array(np.abs(zgas) <= 4)
-    e = np.array(ygn + hsml >=0)
-    condition_a = a&b&c&d&e
-    
-    h = hsml.copy()
-    h[h < hmin] = hmin
-    h[h >= hmax] = hmax
-    
-    x = (np.floor(xgn / pixelsizeX) + 0.5) * pixelsizeX
-    y = (np.floor(ygn / pixelsizeY) + 0.5) * pixelsizeY
-    npx = np.floor(h / pixelsizeX)
-    npy = np.floor(h / pixelsizeY)
-    print('Starting density calculation:')
-    for n in range(len(xgn)):
-        if (condition_a[n] == True):
-            dx = np.arange(-npx[n], npx[n]+1,1)
-            dy = np.arange(-npy[n], npy[n]+1,1)
-                    
-            xx = x[n] + pixelsizeX * dx - xgn[n]
-            yy = y[n] + pixelsizeY * dy - ygn[n]
-            
-            #2D matrica su spindulio kvadratais
-            r2 = (yy * yy)[:,np.newaxis] + xx * xx
-            r = np.sqrt(r2)
-    
-            u = np.sqrt(r2) / h[n] 
-            #Wendland kažkuris kernelis
-            wk = (1 - u) * (1 - u) * (1 - u) * (1 - u) * (1 + 4 * u)
-            wk[u*h[n] > h[n]] = 0 
-            summ = np.sum( wk )
-            if summ > 10e-10:
-                xxx = xx + xgn[n]
-                yyy = yy + ygn[n]
-                #indexai realus
-                maskX = (xxx < XL) & (xxx > 0)
-                maskY =  (yyy < YL) &  (yyy > 0)
-                masksq = maskY[:,np.newaxis] * maskX
-                i = xxx[maskX] / pixelsizeX
-                j = yyy[maskY] / pixelsizeY
-                i = np.array(np.floor(i), dtype=int)
-                j = np.array(np.floor(j), dtype=int)              
-                rho_val[j[:,np.newaxis], i] += mgas[n]*wk[masksq].reshape([len(j), len(i)])/summ
-    rho_val = rho_val / darea # *Unit Column Density
-    del dx, dy, xx, yy,  r2,  r, u, wk, summ, xxx, yyy,  maskX, maskY,  masksq, i, j
-    print('Rho map done [in code units]')
-    print("imshow flips Y axis, take care")
-    print('It took', time.time()-start, 'seconds.')
-    return rho_val
 
-def Par_make_Dmap3D_data_2(pn,nproc, path, extent=[-5, 5, -5., 5., -5., 5.], rezX=512, rezY=512, rezZ=512):
+#this creates a 3D cube of voxels with density values; use at your own peril!
+
+def make_Dmap3D_data(path, extent=[-5, 5, -5., 5., -5., 5.], rezX=512, rezY=512, rezZ=512):
     start = time.time()
     DATA = loader.loader_f(path, partType='gas', wantedData=['pos','mass', 'hsml'])
     pos = DATA['pos'].astype('f')
     mgas = DATA['mass'].astype('f')
    #LEN = mgas.shape[0]
-    hsml = DATA['hsml'][pn::nproc].astype('f')
+    hsml = DATA['hsml'][:].astype('f')
     #Split DATA
-    mgas = mgas[pn::nproc].astype('f')
+    mgas = mgas[:].astype('f')
     
-    xgas = pos[pn::nproc,0].astype('f')
-    ygas = pos[pn::nproc,1].astype('f')
-    zgas = pos[pn::nproc,2].astype('f')
-    print("iki 2ia")
+    xgas = pos[:,0].astype('f')
+    ygas = pos[:,1].astype('f')
+    zgas = pos[:,2].astype('f')
 
-    XL = abs(extent[0]) + abs(extent[1])
-    YL = abs(extent[2]) + abs(extent[3])
-    ZL = abs(extent[4]) + abs(extent[5])
+    XL = abs(extent[0] - extent[1])
+    YL = abs(extent[2] - extent[3])
+    ZL = abs(extent[4] - extent[5])
     #apibreziu tankio masyva
     rho_val = np.zeros([rezY,rezX,rezZ]).astype('f')
     #normavimo konstanta
@@ -697,7 +359,7 @@ def Par_make_Dmap3D_data_2(pn,nproc, path, extent=[-5, 5, -5., 5., -5., 5.], rez
                 j = np.array(np.floor(j), dtype=int)
                 k = np.array(np.floor(k), dtype=int)
                 #rho_val[j[:,np.newaxis], i] += mgas[n]*wk[masksq].reshape([len(j), len(i)])/summ
-                rho_val[k[:,np.newaxis,np.newaxis], j[:,np.newaxis], i] += mgas[n]*wk[mask3d].reshape([len(k),len(j), len(i)]) / summ380
+                rho_val[k[:,np.newaxis,np.newaxis], j[:,np.newaxis], i] += mgas[n]*wk[mask3d].reshape([len(k),len(j), len(i)]) / summ
                 #rho_val[0,1:5,1:5] += 0.2
             del dx, dy, dz, xx, yy, zz, r2, r3, r, u, wk, summ, xxx, yyy, zzz, maskX, maskY, maskZ, masksq, mask3d, i, j, k
     rho_val = rho_val  / darea # Dauginti i6 unit column density

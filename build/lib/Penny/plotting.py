@@ -1,23 +1,23 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Tue Feb 23 12:09:54 2021
-
-@author: kz
+Tools for plotting data
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
 from .basic import *
 import scipy.spatial as sc
+import Penny.Units as unt
 
-def plotsnap(rho, snaptime, extent, quantity, plane, fname, saveplot=False):
+def plotsnap(rho, snaptime, extent, quantity, plane, fname, maxval=999, mamiratio=100, saveplot=False):
     
     if saveplot==False:
         print("saveplot==False:\nNot saving and not closing")
-        
-    ma = rho.max()*0.85# 
-    mi = ma/100# 
+
+    if maxval==999:        
+        ma = rho.max()*0.85# 
+    else:
+        ma = maxval
+    mi = ma/mamiratio# 
     rho_valn = rho.copy()
     rho_valn[rho_valn < mi] = mi
     rho_valn[rho_valn > ma] = ma
@@ -39,15 +39,36 @@ def plotsnap(rho, snaptime, extent, quantity, plane, fname, saveplot=False):
 #ax1.text(4.5,-6, '$\log{ (\\rm{g cm}^{-2}) }$')
     ax1.scatter(0,0,marker = '+',c='k')
 #ax1.ticklabel_format(fontsize = 4)
-    if plane=='XY':
-        ax1.set_xlabel('$x$ /pc', fontsize=10)
-        ax1.set_ylabel('$y$ /pc', fontsize=10)
-    if plane=='YZ':
-        ax1.set_xlabel('$y$ /pc', fontsize=10)
-        ax1.set_ylabel('$z$ /pc', fontsize=10)
-    if plane=='XZ':
-        ax1.set_xlabel('$x$ /pc', fontsize=10)
-        ax1.set_ylabel('$z$ /pc', fontsize=10)
+    if unt.UnitLength_in_cm == 3.086e18:
+        if plane=='XY':
+            ax1.set_xlabel('$x$ /pc', fontsize=10)
+            ax1.set_ylabel('$y$ /pc', fontsize=10)
+        if plane=='YZ':
+            ax1.set_xlabel('$y$ /pc', fontsize=10)
+            ax1.set_ylabel('$z$ /pc', fontsize=10)
+        if plane=='XZ':
+            ax1.set_xlabel('$x$ /pc', fontsize=10)
+            ax1.set_ylabel('$z$ /pc', fontsize=10)
+    elif unt.UnitLength_in_cm == 3.086e21:
+        if plane=='XY':
+            ax1.set_xlabel('$x$ /kpc', fontsize=10)
+            ax1.set_ylabel('$y$ /kpc', fontsize=10)
+        if plane=='YZ':
+            ax1.set_xlabel('$y$ /kpc', fontsize=10)
+            ax1.set_ylabel('$z$ /kpc', fontsize=10)
+        if plane=='XZ':
+            ax1.set_xlabel('$x$ /kpc', fontsize=10)
+            ax1.set_ylabel('$z$ /kpc', fontsize=10)
+    else:
+        if plane=='XY':
+            ax1.set_xlabel('$x$', fontsize=10)
+            ax1.set_ylabel('$y$', fontsize=10)
+        if plane=='YZ':
+            ax1.set_xlabel('$y$', fontsize=10)
+            ax1.set_ylabel('$z$', fontsize=10)
+        if plane=='XZ':
+            ax1.set_xlabel('$x$', fontsize=10)
+            ax1.set_ylabel('$z$', fontsize=10)
     
     ax1.tick_params(right = 'on',tickdir = 'in',top = 'on')
     ax1.tick_params(axis='both',which = 'major',labelsize = 8)
@@ -69,6 +90,9 @@ def plotprofile(pos, data, snaptime, fname, xlabel="x", ylabel="y", xmin=0, xmax
     if meanLine&medianLine:
         print("meanLine or medianLine should be true at the same time\n ploting mean\n")
     
+    if saveplot==False:
+        print("saveplot==False:\nNot saving and not closing")
+
     fig, ax1 = plt.subplots(figsize=(3.5,3.5), dpi=300)
     plt.subplots_adjust(left=0.15, right=0.85, top=0.85, bottom=0.15)
     ax1.tick_params(axis='both', which='both', direction='in', top=True, right=True)

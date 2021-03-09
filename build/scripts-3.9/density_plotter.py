@@ -10,14 +10,20 @@ import matplotlib.pyplot as plt
 import Penny as pen
 import os
 
+#one option of defining paths, based on the contents of the folder
+pathbase = "../Data/"
 data_p = os.popen("ls ../Data/snapshot_*").read().split()
+
+#another, more direct option
+#pathbase = "/home/kz/projects/part2_project/test2/"
+#data_p = [pathbase+"snapshot_020",pathbase+"snapshot_030",pathbase+"snapshot_040",pathbase+"snapshot_060",pathbase+"snapshot_080"]
 
 plane = 'XY'
 quantity = 'density' #type of quantity to make a map of, can be 'density', 'temperature' [others tba]
-extentcube = 5
+extentcube = 1
 #plt.ioff()
-depth = 5
-savepath = "../plot_test/"
+depth = 0.5
+savepath = pathbase
 for i, sn in enumerate(data_p):
     if extentcube > 0:
         extent = [-extentcube, extentcube, -extentcube, extentcube]
