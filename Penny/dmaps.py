@@ -84,8 +84,11 @@ def make_Dmap_data(path, extent, depth=4, quantity='density', plane='XY', rezX=5
 #Now we read the data from the snapshot
     import numpy as np
     snaptime = readhead(path,'time') * unt.UnitTime_in_s/ unt.year
+    partlist = readhead(path,'npartTotal').tolist()
     print("")
+    print("Reading snapshot ", path, ".")
     print("Snapshot time is ", snaptime, " yr.")
+    print("Particle quantities of each type are: ", partlist, ".")
     if quantity == 'density':
         DATA = loader.loader_f(path, partType='gas',wantedData=['pos','mass', 'hsml'])
     if quantity == 'temperature':

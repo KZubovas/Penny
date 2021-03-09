@@ -10,14 +10,20 @@ import matplotlib.pyplot as plt
 import Penny as pen
 import os
 
-data_p = os.popen("ls ../Data/snapshot_*").read().split()
+#data_p = os.popen("ls ../Data/snapshot_*").read().split()
+
+#data_p = os.popen("ls /home/kz/projects/part2_project/test1/snapshot_020").read().split()
+#data_p = ["/home/kz/projects/part2_project/test1/snapshot_020","/home/kz/projects/part2_project/test1/snapshot_030","/home/kz/projects/part2_project/test1/snapshot_040"]
+
+pathbase = "/home/kz/projects/part2_project/test2/"
+data_p = [pathbase+"snapshot_020",pathbase+"snapshot_030",pathbase+"snapshot_040",pathbase+"snapshot_060",pathbase+"snapshot_080"]
 
 plane = 'XY'
 quantity = 'density' #type of quantity to make a map of, can be 'density', 'temperature' [others tba]
-extentcube = 5
+extentcube = 1
 #plt.ioff()
-depth = 5
-savepath = "../plot_test/"
+depth = 0.5
+savepath = pathbase
 for i, sn in enumerate(data_p):
     if extentcube > 0:
         extent = [-extentcube, extentcube, -extentcube, extentcube]
@@ -27,7 +33,7 @@ for i, sn in enumerate(data_p):
     fname = savepath + quantity + sn[-4:]+".png"
     
     try:
-        pen.plotsnap(rho*pen.UnitColumnDensity_in_cgs,snaptime,extent,quantity,plane,fname)
+        pen.plotsnap(rho*pen.UnitColumnDensity_in_cgs,snaptime,extent,quantity,plane,fname,saveplot=True)
     except FileNotFoundError:
         os.popen("mkdir ../plot_test/")
         pen.plotsnap(rho*pen.UnitColumnDensity_in_cgs,snaptime,extent,quantity,plane,fname)

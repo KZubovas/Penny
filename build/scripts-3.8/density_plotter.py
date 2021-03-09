@@ -10,15 +10,18 @@ import matplotlib.pyplot as plt
 import Penny as pen
 import os
 
-data_p = os.popen("ls ../Data/snapshot_*").read().split()
+#data_p = os.popen("ls ../Data/snapshot_*").read().split()
+
+data_p = os.popen("ls /home/kz/projects/part2_project/test1/snapshot_020").read().split()
+data_p = "/home/kz/projects/part2_project/test1/snapshot_020"
 
 plane = 'XY'
 quantity = 'density' #type of quantity to make a map of, can be 'density', 'temperature' [others tba]
-extentcube = 5
+extentcube = 1
 #plt.ioff()
-depth = 5
-savepath = "../plot_test/"
-for i, sn in enumerate(data_p):
+depth = 1
+savepath = "/home/kz/projects/part2_project/test1/"
+for i, sn in enumerate([data_p]):
     if extentcube > 0:
         extent = [-extentcube, extentcube, -extentcube, extentcube]
     else:
