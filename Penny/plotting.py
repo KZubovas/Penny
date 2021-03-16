@@ -74,7 +74,7 @@ def plotsnap(rho, snaptime, extent, quantity, plane, fname, maxval=999, mamirati
     ax1.tick_params(axis='both',which = 'major',labelsize = 8)
     xl = abs(extent[1]-extent[0])*0.65+extent[0]
     yl = abs(extent[3]-extent[2])*0.9+extent[2]
-    string = str(int(snaptime/1000)*0.001)+' Myr'
+    string = str(f'{int(snaptime/1000)*0.001:.2f}') + ' Myr'
     ax1.text(xl,yl,string, fontsize=8, c='k')
     ax1.locator_params(axis='both', nbins = 5)   #which = 'major',
         #Parodo

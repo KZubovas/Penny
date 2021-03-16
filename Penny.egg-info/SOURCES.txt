@@ -1,13 +1,11 @@
 README.md
 setup.py
-Penny/Custom_b.py
 Penny/Units.py
 Penny/__init__.py
 Penny/basic.py
 Penny/dmaps.py
 Penny/loader.py
 Penny/plotting.py
-Penny/units2.py
 Penny.egg-info/PKG-INFO
 Penny.egg-info/SOURCES.txt
 Penny.egg-info/dependency_links.txt
