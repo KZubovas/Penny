@@ -102,13 +102,13 @@ def make_Dmap_data(path, extent, depth=4, quantity='density', plane='XY', rezX=5
         ygas = pos[:,1]
         zgas = pos[:,2]
     if plane=='YZ':
-        xgas = pos[:,2]
-        ygas = pos[:,0]
-        zgas = pos[:,1]       
-    if (plane=='ZX' or plane=='XZ'):
         xgas = pos[:,1]
         ygas = pos[:,2]
-        zgas = pos[:,0]
+        zgas = pos[:,0]       
+    if (plane=='ZX' or plane=='XZ'):
+        xgas = pos[:,2]
+        ygas = pos[:,0]
+        zgas = pos[:,1]
         
     if (plane!='XY' and plane!='YZ' and plane!='XZ' and plane!='ZX'):
         print("Error: wrong plane statement.")

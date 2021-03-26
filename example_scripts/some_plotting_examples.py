@@ -8,11 +8,13 @@ Created on Thu Feb 25 15:05:37 2021
 @author: mt
 """
 
+#run this cell before any other!
+
 import os
 import numpy as np
 import matplotlib.pyplot as plt
 import Penny as pen
-
+from pygadgetreader import * # pygadgetreader requires a separate import 
 
 
 
@@ -78,16 +80,24 @@ plt.ylim(-5,5)
 
 # But if you want an accurate density map - use plotsnap (ex. density_plotter.py)
 
-#%%
+#%% RADIAL PLOT
 # You can plot a radial profile of some quantity using plotprofile()
 
-snaptime = readhead("../Data/snapshot_500",'time') * pen.UnitTime_in_s/ pen.year
+pathbase = "../Data/"
+data_p = pathbase+'snapshot_500'
+
+snaptime = readhead(data_p,'time') * pen.UnitTime_in_s/ pen.year
+
+Data = pen.loadMost(data_p, "gas")
+pos = Data["pos"]
+rho = Data["rho"]
+
 quantity = 'density' #here, 'quantity' only determines the output filename, you should input the correct quantity in the plotprofile call
-savepath = "../plot_test/"
-fname = savepath + quantity + "_profile_500"+".png"
+savepath = data_p
+fname = savepath + '_' + quantity + "_profile"+".png"
 
 #plt.figure(2) #this shouldn't be required, but if you find that plotprofile overplots on a previous figure, uncomment this line
-pen.plotprofile(pos, rho * pen.UnitDensity_in_cgs,snaptime, fname, xlabel="r /pc", ylabel="$\\rho$", xmin=0, xmax=10, nbins=50, logTrue=True, meanLine=False, medianLine=False,  saveplot=False)
+pen.plotprofile(pos, rho * pen.UnitDensity_in_cgs,snaptime, fname, xlabel="r /pc", ylabel="$\\rho$", xmin=0.001, xmax=5, nbins=50, logX=True, logY=True, meanLine=True, medianLine=False,  saveplot=False)
 
 #%% we can add a possibly helpful median or mean line
 #plt.figure(3) #this shouldn't be required, but if you find that plotprofile overplots on a previous figure, uncomment this line

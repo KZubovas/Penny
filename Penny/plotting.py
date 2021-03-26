@@ -85,24 +85,29 @@ def plotsnap(rho, snaptime, extent, quantity, plane, fname, maxval=999, mamirati
     
 
 
-def plotprofile(pos, data, snaptime, fname, xlabel="x", ylabel="y", xmin=0, xmax=100, nbins=50, logTrue=True, meanLine=True, medianLine=False,  saveplot=False):
+def plotprofile(pos, data, snaptime, fname, xlabel="x", ylabel="y", xmin=0, xmax=100, nbins=50, logX=True, logY=True, meanLine=True, medianLine=False,  saveplot=False):
 
     if meanLine&medianLine:
-        print("meanLine or medianLine should be true at the same time\n ploting mean\n")
+        print("Both meanLine and medianLine should not be true at the same time\n plotting mean line\n")
     
     if saveplot==False:
         print("saveplot==False:\nNot saving and not closing")
 
     fig, ax1 = plt.subplots(figsize=(3.5,3.5), dpi=300)
-    plt.subplots_adjust(left=0.15, right=0.85, top=0.85, bottom=0.15)
+    plt.subplots_adjust(left=0.2, right=0.9, top=0.85, bottom=0.15)
     ax1.tick_params(axis='both', which='both', direction='in', top=True, right=True)
     
     rgas = rval(pos)
     rgas = rgas.reshape(-1, 1)
     
     if meanLine|medianLine:
-        Tree = sc.cKDTree(rgas)
-        xbins = np.linspace(xmin,xmax,nbins)
+        if logX:
+            Tree = sc.cKDTree(np.log10(rgas))
+            xbins = np.linspace(np.log10(xmin),np.log10(xmax),nbins)
+        else:
+            Tree = sc.cKDTree(rgas)
+            xbins = np.linspace(xmin,xmax,nbins)
+
         dist = (xbins[1]-xbins[0])/2
         xbins_c = xbins[:-1] + dist
     
@@ -117,10 +122,16 @@ def plotprofile(pos, data, snaptime, fname, xlabel="x", ylabel="y", xmin=0, xmax
 
     plt.plot(rgas, data, alpha=0.01, ls="", marker=".")
     if meanLine|medianLine:
-        ax1.plot(xbins_c, data_plt, c="r")
+        if logX:
+            ax1.plot(10**xbins_c, data_plt, c="r")
+        else:
+            ax1.plot(xbins_c, data_plt, c="r")
         #print(xbins_c)
     ax1.set_xlim(xmin,xmax)
-    if logTrue:
+    if logX:
+        ax1.set_xscale("log")
+    
+    if logY:
         ax1.set_yscale("log")
     
     ax1.set_xlabel(xlabel)
