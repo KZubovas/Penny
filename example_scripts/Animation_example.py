@@ -90,4 +90,4 @@ def run(data):
 ani = animation.FuncAnimation(fig, run, data_gen, blit=True, interval=10,
     repeat=False)
 ani.save('../plot_test/basic_animation.mp4', fps=24, extra_args=['-vcodec', 'libx264'])
-print("Took me:", time.time() - start)
+print("Took me:", time.time() - start, " seconds.")
