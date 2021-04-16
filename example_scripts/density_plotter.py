@@ -15,7 +15,9 @@ import os
 #data_p = os.popen("ls ../Data/snapshot_*").read().split()
 
 #another, more direct option
-pathbase = "../Data/"
+pathbase = "/home/kz/projects/part2_project/test_better/"
+#pathbase = "/home/kz/projects/students_turbAGN/test_nt_L1T1R1/"
+#pathbase = "../Data/"
 data_p =  [pathbase+"snapshot_040"]#,pathbase+"snapshot_040"]#,pathbase+"snapshot_040",pathbase+"snapshot_045"]#,pathbase+"snapshot_080"]
 
 plane = 'XY'

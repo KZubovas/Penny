@@ -97,7 +97,7 @@ savepath = data_p
 fname = savepath + '_' + quantity + "_profile"+".png"
 
 #plt.figure(2) #this shouldn't be required, but if you find that plotprofile overplots on a previous figure, uncomment this line
-pen.plotprofile(pos, rho * pen.UnitDensity_in_cgs,snaptime, fname, xlabel="r /pc", ylabel="$\\rho$", xmin=0.001, xmax=5, nbins=50, logX=True, logY=True, meanLine=False, medianLine=False,  saveplot=False)
+pen.plotprofile(pos, rho * pen.UnitDensity_in_cgs, snaptime, fname, xlabel="r /pc", ylabel="$\\rho$", xmin=0.001, xmax=5, ymin = 1e-25, ymax = 1e-21, nbins=50, logX=True, logY=True, meanLine=False, medianLine=True,  saveplot=False)
 
 #%% we can add a possibly helpful median or mean line
 #plt.figure(3) #this shouldn't be required, but if you find that plotprofile overplots on a previous figure, uncomment this line

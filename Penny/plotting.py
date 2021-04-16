@@ -85,13 +85,19 @@ def plotsnap(rho, snaptime, extent, quantity, plane, fname, maxval=999, mamirati
     
 
 
-def plotprofile(pos, data, fname, xlabel="x", ylabel="y", xmin=0, xmax=100, nbins=50, logX=True, logY=True, meanLine=True, medianLine=False,  saveplot=False):
+def plotprofile(pos, data, snaptime, fname, xlabel="x", ylabel="y", xmin=0, xmax=100, ymin=0, ymax=0, nbins=50, logX=True, logY=True, meanLine=True, medianLine=False,  saveplot=False):
 
     if meanLine&medianLine:
         print("Both meanLine and medianLine should not be true at the same time\n plotting mean line\n")
     
     if saveplot==False:
         print("saveplot==False:\nNot saving and not closing")
+        
+    if ymin==0:
+        ymin = 0.9*min(data)
+        
+    if ymax==0:
+        ymax = 1.1*max(data)
 
     fig, ax1 = plt.subplots(figsize=(3.5,3.5), dpi=300)
     plt.subplots_adjust(left=0.2, right=0.9, top=0.85, bottom=0.15)
@@ -128,6 +134,7 @@ def plotprofile(pos, data, fname, xlabel="x", ylabel="y", xmin=0, xmax=100, nbin
             ax1.plot(xbins_c, data_plt, c="r")
         #print(xbins_c)
     ax1.set_xlim(xmin,xmax)
+    ax1.set_ylim(ymin,ymax)
     if logX:
         ax1.set_xscale("log")
     
@@ -136,6 +143,12 @@ def plotprofile(pos, data, fname, xlabel="x", ylabel="y", xmin=0, xmax=100, nbin
     
     ax1.set_xlabel(xlabel)
     ax1.set_ylabel(ylabel)
+
+    xl = xmin * (xmax/xmin)**0.1
+    yl = ymin * (ymax/ymin)**0.9
+    string = str(f'{int(snaptime/1000)*0.001:.2f}') + ' Myr'
+    ax1.text(xl,yl,string, fontsize=8, c='k')
+
         #Parodo
     if saveplot:
         plt.savefig(fname, format='png', dpi=300)

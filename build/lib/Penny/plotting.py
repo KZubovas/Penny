@@ -85,13 +85,19 @@ def plotsnap(rho, snaptime, extent, quantity, plane, fname, maxval=999, mamirati
     
 
 
-def plotprofile(pos, data, snaptime, fname, xlabel="x", ylabel="y", xmin=0, xmax=100, nbins=50, logX=True, logY=True, meanLine=True, medianLine=False,  saveplot=False):
+def plotprofile(pos, data, snaptime, fname, xlabel="x", ylabel="y", xmin=0, xmax=100, ymin=0, ymax=0, nbins=50, logX=True, logY=True, meanLine=True, medianLine=False,  saveplot=False):
 
     if meanLine&medianLine:
-        print("meanLine or medianLine should be true at the same time\n ploting mean\n")
+        print("Both meanLine and medianLine should not be true at the same time\n plotting mean line\n")
     
     if saveplot==False:
         print("saveplot==False:\nNot saving and not closing")
+        
+    if ymin==0:
+        ymin = 0.9*min(data)
+        
+    if ymax==0:
+        ymax = 1.1*max(data)
 
     fig, ax1 = plt.subplots(figsize=(3.5,3.5), dpi=300)
     plt.subplots_adjust(left=0.2, right=0.9, top=0.85, bottom=0.15)
@@ -128,6 +134,7 @@ def plotprofile(pos, data, snaptime, fname, xlabel="x", ylabel="y", xmin=0, xmax
             ax1.plot(xbins_c, data_plt, c="r")
         #print(xbins_c)
     ax1.set_xlim(xmin,xmax)
+    ax1.set_ylim(ymin,ymax)
     if logX:
         ax1.set_xscale("log")
     
@@ -136,8 +143,162 @@ def plotprofile(pos, data, snaptime, fname, xlabel="x", ylabel="y", xmin=0, xmax
     
     ax1.set_xlabel(xlabel)
     ax1.set_ylabel(ylabel)
+
+    xl = xmin * (xmax/xmin)**0.1
+    yl = ymin * (ymax/ymin)**0.9
+    string = str(f'{int(snaptime/1000)*0.001:.2f}') + ' Myr'
+    ax1.text(xl,yl,string, fontsize=8, c='k')
+
         #Parodo
     if saveplot:
         plt.savefig(fname, format='png', dpi=300)
         plt.close()
     #plt.show()
+
+#%%    
+    
+def profileHist(pos, data, fname, xlabel="x", ylabel="y", extent=[0.01,10,1e-7,0.5], nbins=200, logX=True, logY=True, meanLine=True, medianLine=True, ignoreZeros=True,  saveplot=False):
+   
+    print(extent)
+    if logX:
+        Xspace = np.logspace(np.log10(extent[0]), np.log10(extent[1]), nbins)
+        extent[:2] = np.log10(extent[:2] )
+    else:
+        Xspace = np.linspace(extent[0],extent[1], nbins)
+        
+    if logY:
+        Yspace = np.logspace(np.log10(extent[2]), np.log10(extent[3]), nbins)
+        extent[2:] = np.log10(extent[2:] )
+    else:
+        Yspace = np.linspace(extent[2],extent[3], nbins)
+    print(extent)
+    rgas = pen.rval(Pos)
+    histCounts,histBins1,histBins2  = np.histogram2d(Data, rgas, bins=(Yspace, Xspace))
+    fig, ax1 = plt.subplots(figsize=(3.5,3.5), dpi=300)
+    plt.subplots_adjust(left=0.2, right=0.9, top=0.85, bottom=0.15)
+    ax1.tick_params(axis='both', which='both', direction='in', top=True, right=True)
+    
+    plt.imshow(np.log10(histCounts), extent=extent, origin="lower")
+    if ignoreZeros:
+        getZeroCol = np.sum(histCounts, 0)==0
+    else:
+        getZeroCol = (np.sum(histCounts, 0)==-np.inf)
+
+    if logX and logY:
+        print("both log")
+        xbins_c = 10**(np.log10(histBins2[:-1]) + np.diff(np.log10(histBins2))/2)
+        ybins_c = 10**(np.log10(histBins1[:-1]) + np.diff(np.log10(histBins1))/2)
+        if medianLine==True:
+            medianPx = np.argmax(np.log10(histCounts), 0)
+            plt.plot(np.log10(xbins_c[~getZeroCol]), np.log10(ybins_c[medianPx[~getZeroCol]]), lw=1, c="r")
+        if meanLine==True:
+            NperX = np.sum(histCounts, 0)[~getZeroCol]
+            MeanY =np.sum(histCounts*ybins_c[:,np.newaxis], 0)[~getZeroCol]/NperX
+            plt.plot(np.log10(xbins_c[~getZeroCol]), np.log10(MeanY), lw=1, c="y")
+            
+        plt.gca().set_aspect( (extent[1]-extent[0])/(extent[3]-extent[2]))
+    
+    if (logY and (logX==False)):
+        print("ylog log")
+        xbins_c = histBins2[:-1] + np.diff(histBins2)/2
+        ybins_c = 10**(np.log10(histBins1[:-1]) + np.diff(np.log10(histBins1))/2)
+        if medianLine:
+            medianPx = np.argmax(np.log10(histCounts), 0)
+            plt.plot(xbins_c[~getZeroCol], np.log10(ybins_c[medianPx[~getZeroCol]]), lw=3, c="r")
+        if meanLine:
+            NperX = np.sum(histCounts, 0)[~getZeroCol]
+            MeanY =np.sum(histCounts*ybins_c[:,np.newaxis], 0)[~getZeroCol]/NperX
+            plt.plot(xbins_c[~getZeroCol], np.log10(MeanY), lw=1, c="y")
+        plt.gca().set_aspect( (extent[1]-extent[0])/(extent[3]-extent[2]))
+        
+    if (logY==False) and logX:
+        print("xlog log")
+        xbins_c = 10**(np.log10(histBins2[:-1]) + np.diff(np.log10(histBins2))/2)
+        ybins_c = histBins1[:-1] + np.diff(histBins1)/2
+        if medianLine:
+            medianPx = np.argmax(np.log10(histCounts), 0)
+            plt.plot(np.log10(xbins_c[~getZeroCol]), ybins_c[medianPx[~getZeroCol]], lw=3, c="r")
+        if meanLine:
+            NperX = np.sum(histCounts, 0)[~getZeroCol]
+            MeanY =np.sum(histCounts*ybins_c[:,np.newaxis], 0)[~getZeroCol]/NperX
+            plt.plot(np.log10(xbins_c[~getZeroCol]), MeanY, lw=1, c="y")
+            
+        plt.gca().set_aspect( (extent[1]-extent[0])/(extent[3]-extent[2]))
+        
+    if (logY==False) and (logX==False):
+        print("both lin")
+        xbins_c = histBins2[:-1] + np.diff(histBins2)/2
+        ybins_c = histBins1[:-1] + np.diff(histBins1)/2
+        if medianLine:
+            medianPx = np.argmax(np.log10(histCounts), 0)
+            plt.plot((xbins_c[~getZeroCol]), (ybins_c[medianPx[~getZeroCol]]), lw=3, c="r")
+        if meanLine:
+            NperX = np.sum(histCounts, 0)[~getZeroCol]
+            MeanY =np.sum(histCounts*ybins_c[:,np.newaxis], 0)[~getZeroCol]/NperX
+            plt.plot(xbins_c[~getZeroCol], MeanY, lw=1, c="y")
+        
+        plt.gca().set_aspect( (extent[1]-extent[0])/(extent[3]-extent[2]))    
+
+    plt.colorbar()
+    
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    if saveplot:
+        plt.savefig(fname, format='png', dpi=300)
+        plt.close()
+    
+"""
+Just a test 
+X = [True, False]
+Y = [True, False]
+counter = 0
+for i in X:
+    for j in Y:
+        counter +=1
+        profileHist(Pos, Data, fname="/home/mt/Penny/plot_test/hist_prof_{:03d}.png".format(counter), extent=[0.01,10,1e-7,0.5], logX=i, logY=j, saveplot=True)
+"""    
+        
+        
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

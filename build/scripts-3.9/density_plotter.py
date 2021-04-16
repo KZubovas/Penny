@@ -15,15 +15,16 @@ import os
 #data_p = os.popen("ls ../Data/snapshot_*").read().split()
 
 #another, more direct option
-#pathbase = "/home/kz/projects/part2_project/test2/"
-pathbase = "/home/kz/projects/students_turbAGN/test_L1T1R1/"
-data_p = [pathbase+"snapshot_030",pathbase+"snapshot_040"]#,pathbase+"snapshot_040",pathbase+"snapshot_045"]#,pathbase+"snapshot_080"]
+pathbase = "/home/kz/projects/part2_project/test_better/"
+#pathbase = "/home/kz/projects/students_turbAGN/test_nt_L1T1R1/"
+#pathbase = "../Data/"
+data_p =  [pathbase+"snapshot_040"]#,pathbase+"snapshot_040"]#,pathbase+"snapshot_040",pathbase+"snapshot_045"]#,pathbase+"snapshot_080"]
 
 plane = 'XY'
 quantity = 'density' #type of quantity to make a map of, can be 'density', 'temperature' [others tba]
-extentcube = 1.
+extentcube = 2.
 #plt.ioff()
-depth = 5
+depth = 0.1
 savepath = pathbase
 for i, sn in enumerate(data_p):
     if extentcube > 0:
@@ -31,7 +32,7 @@ for i, sn in enumerate(data_p):
     else:
         extent = [-5, 5, -5., 5.]
     rho, snaptime = pen.make_Dmap_data(sn, extent, depth, quantity, plane)
-    fname = savepath + quantity + sn[-4:]+".png"
+    fname = savepath + quantity + sn[-4:]+"_slice.png"
     
     try:
         pen.plotsnap(rho*pen.UnitColumnDensity_in_cgs,snaptime,extent,quantity,plane,fname, maxval=10, mamiratio=1e5,saveplot=True)
