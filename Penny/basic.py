@@ -28,8 +28,8 @@ def dotp(v1, v2): #dot product of two vectors
 def ToSph(pos):
     possph = np.zeros_like(pos)
     r = np.sum(pos**2, 1)**0.5
-    theta = np.arctan(pos[:,1]/pos[:,0])
-    phi = np.arctan(r/pos[:,2])
+    theta = np.arccos(pos[:,2]/r)
+    phi = np.arctan2(pos[:,1], pos[:,0])
     possph[:,0] = r
     possph[:,1] = theta
     possph[:,2] = phi
