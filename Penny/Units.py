@@ -65,3 +65,5 @@ day = 8.64e4         # Day                     [s]
 #     Math constants
 #
 pi  = 3.1415926535897932385 
+
+u_to_temp_fac = mu_ion * mp / kk * (5./3-1.) * UnitEnergy_in_cgs / UnitMass_in_g

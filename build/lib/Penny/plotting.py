@@ -3,6 +3,7 @@ Tools for plotting data
 """
 
 import numpy as np
+import random
 import matplotlib.pyplot as plt
 from .basic import *
 import scipy.spatial as sc
@@ -144,8 +145,14 @@ def plotprofile(pos, data, snaptime, fname, xlabel="x", ylabel="y", xmin=0, xmax
     ax1.set_xlabel(xlabel)
     ax1.set_ylabel(ylabel)
 
-    xl = xmin * (xmax/xmin)**0.1
-    yl = ymin * (ymax/ymin)**0.9
+    if logX:
+        xl = xmin * (xmax / xmin)**0.1
+    else:
+        xl = xmin + (xmax - xmin) * 0.1
+    if logY:
+        yl = ymin * (ymax / ymin)**0.9
+    else:
+        yl = ymin + (ymax - ymin) * 0.9
     string = str(f'{int(snaptime/1000)*0.001:.2f}') + ' Myr'
     ax1.text(xl,yl,string, fontsize=8, c='k')
 
@@ -154,6 +161,94 @@ def plotprofile(pos, data, snaptime, fname, xlabel="x", ylabel="y", xmin=0, xmax
         plt.savefig(fname, format='png', dpi=300)
         plt.close()
     #plt.show()
+
+
+
+def plotsum(pos, data, snaptime, fname, xlabel="x", ylabel="y", xmin=0, xmax=100, ymin=0, ymax=0, nbins=50, SumByShell=True, logX=True, logY=True, deviations=True, saveplot=False):
+
+    if saveplot==False:
+        print("saveplot==False:\nNot saving and not closing")
+        
+
+    fig, ax1 = plt.subplots(figsize=(3.5,3.5), dpi=300)
+    plt.subplots_adjust(left=0.2, right=0.9, top=0.85, bottom=0.15)
+    ax1.tick_params(axis='both', which='both', direction='in', top=True, right=True)
+    
+    rg = rval(pos)
+    rgas = rg.reshape(-1, 1)
+    
+    if logX:
+        Tree = sc.cKDTree(np.log10(rgas))
+        xbins = np.linspace(np.log10(xmin),np.log10(xmax),nbins)
+    else:
+        Tree = sc.cKDTree(rgas)
+        xbins = np.linspace(xmin,xmax,nbins)
+
+    dist = (xbins[1]-xbins[0])/2
+    xbins_c = xbins[:-1] + dist
+    
+    Ind = Tree.query_ball_point( x=xbins_c.reshape(-1,1) , r=dist)
+    sumline = np.zeros(xbins_c.shape[0])
+    if deviations:
+        devline = np.zeros(xbins_c.shape[0])
+    for i, ind in enumerate(Ind):
+        if SumByShell:
+            data[ind] *= rg[ind] / (2. * dist)
+        #print(i, ind, rho[ind].mean())
+        sumline[i] = data[ind].sum()
+        if deviations and data[ind].size != 0:
+            #create 100 random subsamples of data[ind]
+            dummy = np.zeros(100)
+            for j in range(100):
+                dum_list = np.asarray(random.choices(data[ind], k=int(np.ceil(data[ind].size/100))))
+                dummy[j] = dum_list.sum()*data[ind].size/dum_list.size                        
+            #calculate deviation of those sums
+            devline[i] = np.std(dummy)           
+
+    if ymin==0:
+        ymin = 0.9*min(sumline-devline)
+    if ymax==0:
+        ymax = 1.1*max(sumline+devline)
+
+    if logX:
+        plotbins = 10**xbins_c
+    else:
+        plotbins = xbins_c
+
+    plt.plot(plotbins, sumline, linewidth = 2, c='r')
+    if deviations:
+        ax1.fill_between(plotbins, sumline-devline, sumline+devline, facecolor='red', alpha=0.3)
+        ax1.plot(plotbins, sumline-devline, linestyle='dashdot', linewidth=1, c='r', alpha = 0.8)
+        ax1.plot(plotbins, sumline+devline, linestyle='dashdot', linewidth=1, c='r', alpha = 0.8)
+            
+    ax1.set_xlim(xmin,xmax)
+    ax1.set_ylim(ymin,ymax)
+    if logX:
+        ax1.set_xscale("log")
+    
+    if logY:
+        ax1.set_yscale("log")
+    
+    ax1.set_xlabel(xlabel)
+    ax1.set_ylabel(ylabel)
+
+    if logX:
+        xl = xmin * (xmax / xmin)**0.1
+    else:
+        xl = xmin + (xmax - xmin) * 0.1
+    if logY:
+        yl = ymin * (ymax / ymin)**0.9
+    else:
+        yl = ymin + (ymax - ymin) * 0.9
+    string = str(f'{int(snaptime/1000)*0.001:.2f}') + ' Myr'
+    ax1.text(xl,yl,string, fontsize=8, c='k')
+
+        #Parodo
+    if saveplot:
+        plt.savefig(fname, format='png', dpi=300)
+        plt.close()
+    #plt.show()
+
 
 #%%    
     

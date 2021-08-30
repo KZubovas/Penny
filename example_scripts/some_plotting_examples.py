@@ -83,21 +83,105 @@ plt.ylim(-5,5)
 #%% RADIAL PLOT
 # You can plot a radial profile of some quantity using plotprofile()
 
-pathbase = "../Data/"
-data_p = pathbase+'snapshot_500'
+#pathbase = "../Data/"
+#data_p = pathbase+'snapshot_500'
+#data_p = '/home/kz/projects/mato_code/test2/snapshot_010'
+#data_p = '/home/kz/projects/gadget_archyvinis/test7/snapshot_001'
+#data_p = '/home/kz/projects/students_turbAGN/dm_L3T1/snapshot_060'
+#data_p = '/home/kz/projects/students_turbAGN/new_L1T1/snapshot_020'
+#data_p = '/home/kz/projects/CODE_turbsf_testing/outflow_fg01_newtest/snapshot_020'
+#data_p = '/mnt/old_kz/CODE_turbsf/test_L1T1_copy/snapshot_001'
+#data_p = '/mnt/old_kz/CODE_turbsf/outflow_fg01_L1T1/snapshot_020'
+#data_p = '/mnt/old_kz/gadget-mb-latest/test_L1T1_copy/snapshot_001'
+#data_p = '/home/kz/gadget_mb_2017/test_L1T1/snapshot_040'
+#data_p = '/home/kz/gadget_mb_2017/mato_test/snapshot_000'
+#data_p = '/home/kz/projects/turbsf/test_L1T1_copy/snapshot_010'
+#data_p = '/home/kz/matas_storage/fermi_cubic_fg1e-3_highN.dat'
+data_p = '/home/kz/projects/students_turbAGN/new_L1T1_correct_cooling/snapshot_030'
+#data_p = '/home/kz/projects/gadget_sn_2021/test_mato/snapshot_001'
 
+#NPart = readhead(data_p, 'npartTotal')
 snaptime = readhead(data_p,'time') * pen.UnitTime_in_s/ pen.year
 
 Data = pen.loadMost(data_p, "gas")
 pos = Data["pos"]
+rtot = Data["rtot"]
 rho = Data["rho"]
+vr = Data["vrad"]
+mass = Data["mass"]
+vtot = Data["vtot"]
+u = Data["u"]
+temp = u*pen.u_to_temp_fac
 
-quantity = 'density' #here, 'quantity' only determines the output filename, you should input the correct quantity in the plotprofile call
+tempc = (np.log10(temp)-min(np.log10(temp)))/(max(np.log10(temp))- min(np.log10(temp)))
+
+# plt.plot(pos[:,0], pos[:,1], ls='', marker='.', markersize=0.1, c=tempc)
+# plt.xlim(-5,5)
+# plt.ylim(-5,5)
+# plt.yscale("linear")
+# plt.show()
+
+plt.plot(rtot, temp, ls='', marker='.', markersize=0.1)
+plt.xlim(0,2)
+plt.ylim(1e1,1e7)
+plt.yscale("log")
+plt.show()
+
+# plt.plot(rtot, rho, ls='', marker='.', markersize=0.1)
+# plt.xlim(0,20)
+# plt.ylim(1e-6,3e-3)
+# plt.yscale("log")
+# plt.show()
+
+# plt.plot(rho, temp, ls='', marker='.', markersize=0.1)
+# #plt.xlim(1e-5,1e-3)
+# #plt.ylim(1e2,1e5)
+# plt.xscale("log")
+# plt.yscale("log")
+# plt.xlabel("Density")
+# plt.ylabel("Temperature")
+# plt.show()
+
+# plt.plot(rtot, vr*pen.UnitVelocity_in_cm_per_s/1.e5, ls='', marker='.', markersize=0.1)
+# plt.xlim(0,20)
+# plt.ylim(-400,200)
+# plt.yscale("linear")
+# plt.show()
+ 
+#%%
+
+data_p = '/home/kz/projects/students_turbAGN/dm_control/snapshot_096'
+snaptime = readhead(data_p,'time') * pen.UnitTime_in_s/ pen.year
+
+Data_s = pen.loadMost(data_p, "dm")
+pos_dm = Data_s["pos"]
+rtot_dm = Data_s["rtot"]
+mass_dm = Data_s["mass"]
+vtot_dm = Data_s["vtot"]
+
+#enbig = 3.42026e58 
+
+#eninput = 1.255e46*3.15e13*0.05 / pen.UnitEnergy_in_cgs
+#eninit = (mass*vtot**2/2).sum()+(mass*np.log10(rtot)).sum()+(mass*u).sum()
+# enfinal_s = (mass_s*vtot_s**2/2).sum()+(mass_s*np.log10(rtot_s)).sum()
+
+#mask = (vr > 1) #& (temp < 5e4)
+#posmask = pos[mask]
+#mdot = mass[mask]*vr[mask]/rtot[mask] * pen.UnitMass_in_g / 1.989e33 / pen.UnitTime_in_s * 3.15e7
+#pdot = mdot * 1.989e33 / 3.15e7 * vr[mask] * pen.UnitVelocity_in_cm_per_s / (1.3e46 / 3e10)
+
+quantity = 'mdot' #here, 'quantity' only determines the output filename, you should input the correct quantity in the plotprofile call
 savepath = data_p
 fname = savepath + '_' + quantity + "_profile"+".png"
 
 #plt.figure(2) #this shouldn't be required, but if you find that plotprofile overplots on a previous figure, uncomment this line
-pen.plotprofile(pos, rho * pen.UnitDensity_in_cgs, snaptime, fname, xlabel="r /pc", ylabel="$\\rho$", xmin=0.001, xmax=5, ymin = 1e-25, ymax = 1e-21, nbins=50, logX=True, logY=True, meanLine=False, medianLine=True,  saveplot=False)
+pen.plotprofile(pos_dm, mass_dm, snaptime, fname, xlabel="r /kpc", ylabel="Mdm", xmin=0.01, xmax=5, ymin = 0, ymax = 0, nbins=50, logX=True, logY=True, meanLine=True, medianLine=False,  saveplot=True)
+
+#this plots "shell sums" of a quantity rather than simple radial profiles; useful for such quantities as mass flow rate
+#pen.plotsum(pos_dm, mass_dm/rtot_dm**2, snaptime, fname, xlabel="r /kpc", ylabel="$\\dot{M}$ / $M_{Sun} yr^{-1}$", xmin=0.01, xmax=5, ymin = 0.1, ymax = 100, nbins=20, SumByShell=True, logX=True, logY=True, deviations=True, saveplot=True)
+
+#ylabel="$\\dot{p}$ / $L_{Edd} c^{-1}$"
+
 
 #%% we can add a possibly helpful median or mean line
 #plt.figure(3) #this shouldn't be required, but if you find that plotprofile overplots on a previous figure, uncomment this line

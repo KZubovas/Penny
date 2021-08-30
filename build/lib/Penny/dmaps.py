@@ -91,9 +91,8 @@ def make_Dmap_data(path, extent, depth=4, quantity='density', plane='XY', rezX=5
     if quantity == 'density':
         DATA = loader.loader_f(path, partType='gas',wantedData=['pos','mass', 'hsml'])
     if quantity == 'temperature':
-        DATA = loader.loader_f(path, partType='gas',wantedData=['pos','mass', 'hsml', 'u', 'rho'])
-        u_to_temp_fac = unt.mu_ion * unt.mp / unt.kk * (5./3-1.) * unt.UnitEnergy_in_cgs / unt.UnitMass_in_g
-        temp = DATA['u']*u_to_temp_fac
+        DATA = loader.loader_f(path, partType='gas',wantedData=['pos','mass', 'hsml', 'u', 'rho'])        
+        temp = DATA['u']*unt.u_to_temp_fac
         dens = DATA['rho']
     pos = DATA['pos']
     #rotate coordinates to get the plane I need
@@ -203,8 +202,7 @@ def make_Dmap_data_Tree(path, quantity='density', extent=[-5, 5, -5., 5.,-1.25, 
         DATA = loader.loader_f(path, partType='gas',wantedData=['pos','mass', 'hsml','rho'])
     if quantity == 'temperature':
         DATA = loader.loader_f(path, partType='gas',wantedData=['pos','mass', 'hsml', 'u', 'rho'])
-        u_to_temp_fac = unt.mu_ion * unt.mp / unt.kk * (5./3-1.) * unt.UnitEnergy_in_cgs / unt.UnitMass_in_g
-        temp = DATA['u']*u_to_temp_fac
+        temp = DATA['u']*unt.u_to_temp_fac
         dens = DATA['rho']
     if (quantity != 'temperature') and (quantity != 'density'):
         print("using "+quantity+" as quantity.")
