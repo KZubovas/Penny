@@ -300,7 +300,7 @@ def plotrel(pos, data, posrel, datarel, snaptime, fname, xlabel="x", ylabel="y",
             devline[i] = np.std(dummy)           
     for i, indrel in enumerate(Indrel):
         if SumByShell:
-            datarel[indrel] *= rg[indrel] / (2. * dist)
+            datarel[indrel] *= rgrel[indrel] / (2. * dist)
         #print(i, ind, rho[ind].mean())
         sumlinerel[i] = datarel[indrel].sum()
         
