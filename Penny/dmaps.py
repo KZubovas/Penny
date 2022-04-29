@@ -198,7 +198,7 @@ def make_Dmap_data(path, extent, depth=4, quantity='density', plane='XY', rezX=5
 
 
 #Fixed to give correct average velocity/temperature etc. Use rho_val/delta_l
-def make_Dmap_data(path, extent, depth=4, quantity='density', plane='XY',
+def make_Dmap_data_mean(path, extent, depth=4, quantity='density', plane='XY',
                    rezX=512, rezY=512, kernel="wendland2", mock_data=False, use_wedge_cut=False, cut_angle=np.pi/128):
     start = time.time()
 
