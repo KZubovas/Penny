@@ -14,6 +14,7 @@ import os
 
 import Penny.loader as loader
 import Penny.Units as unt
+import Penny.basic as basic
 
 import matplotlib.pyplot as plt
 
@@ -296,9 +297,9 @@ def make_Dmap_data_mean(path, extent, depth=4, quantity='density', plane='XY',
     if quantity =="vx":
         vel = velx
     if quantity =="vr":
-        vel = pen.ToSph(vel)[:,0]
+        vel = basic.ToSph(vel)[:,0]
 
-    sphPos = pen.ToSph( np.array([pos[:,2], pos[:,0], pos[:,1]]).T )
+    sphPos = basic.ToSph( np.array([pos[:,2], pos[:,0], pos[:,1]]).T )
 
     if (plane!='XY' and plane!='YZ' and plane!='XZ' and plane!='ZX'):
         print("Error: wrong plane statement.")
